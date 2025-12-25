@@ -142,7 +142,8 @@ function createSearchCodebaseTool(): Tool {
             const { query, fileTypes, contextLines = 2 } = params;
             const workingDir = context?.workingDirectory || process.cwd();
 
-            let command = `git grep -n -C ${contextLines}`;
+            // Build command with proper git grep syntax: pattern comes BEFORE pathspec
+            let command = `git grep -n -C ${contextLines} "${query}"`;
 
             if (fileTypes && fileTypes.length > 0) {
                 const globPattern = fileTypes.length === 1
@@ -150,8 +151,6 @@ function createSearchCodebaseTool(): Tool {
                     : `*.{${fileTypes.join(',')}}`;
                 command += ` -- "${globPattern}"`;
             }
-
-            command += ` "${query}"`;
 
             try {
                 const output = await run(command, { cwd: workingDir });
