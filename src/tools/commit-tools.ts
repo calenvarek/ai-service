@@ -146,11 +146,9 @@ function createSearchCodebaseTool(): Tool {
             let command = `git grep -n -C ${contextLines} "${query}"`;
 
             if (fileTypes && fileTypes.length > 0) {
-                const globPattern = fileTypes.length === 1
-                    ? `*.${fileTypes[0]}`
-                    : `*.{${fileTypes.join(',')}}`;
-                // Don't quote the glob pattern - git needs it unquoted for proper pathspec matching
-                command += ` -- ${globPattern}`;
+                // Use separate quoted patterns for each file type to avoid shell expansion issues
+                const patterns = fileTypes.map(ext => `'*.${ext}'`).join(' ');
+                command += ` -- ${patterns}`;
             }
 
             try {

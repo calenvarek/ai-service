@@ -103,7 +103,7 @@ describe('Commit Tools', () => {
             );
 
             expect(vi.mocked(mockRun)).toHaveBeenCalledWith(
-                'git grep -n -C 2 "function test" -- *.{ts,js}',
+                'git grep -n -C 2 "function test" -- \'*.ts\' \'*.js\'',
                 { cwd: '/test' }
             );
         });
@@ -120,7 +120,7 @@ describe('Commit Tools', () => {
             );
 
             expect(vi.mocked(mockRun)).toHaveBeenCalledWith(
-                'git grep -n -C 2 "export" -- *.ts',
+                'git grep -n -C 2 "export" -- \'*.ts\'',
                 { cwd: '/test' }
             );
         });

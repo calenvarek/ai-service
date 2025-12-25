@@ -13,7 +13,7 @@ describe('commit-tools', () => {
     });
 
     describe('search_codebase tool', () => {
-        it('should construct git grep command without quotes around glob pattern', async () => {
+        it('should construct git grep command with separate quoted patterns', async () => {
             const tools = createCommitTools();
             const searchTool = tools.find(t => t.name === 'search_codebase');
 
@@ -34,14 +34,14 @@ describe('commit-tools', () => {
                 { workingDirectory: '/test/dir' }
             );
 
-            // Verify the command was constructed correctly (without quotes around glob)
+            // Verify the command was constructed correctly (with separate quoted patterns)
             expect(gitTools.run).toHaveBeenCalledWith(
-                'git grep -n -C 2 "createStorageAdapter" -- *.{ts,js}',
+                'git grep -n -C 2 "createStorageAdapter" -- \'*.ts\' \'*.js\'',
                 { cwd: '/test/dir' }
             );
         });
 
-        it('should handle single file type without braces', async () => {
+        it('should handle single file type with quotes', async () => {
             const tools = createCommitTools();
             const searchTool = tools.find(t => t.name === 'search_codebase');
 
@@ -59,9 +59,9 @@ describe('commit-tools', () => {
                 { workingDirectory: '/test/dir' }
             );
 
-            // Single file type should not have braces
+            // Single file type should be quoted
             expect(gitTools.run).toHaveBeenCalledWith(
-                'git grep -n -C 2 "StorageAdapter" -- *.ts',
+                'git grep -n -C 2 "StorageAdapter" -- \'*.ts\'',
                 { cwd: '/test/dir' }
             );
         });
