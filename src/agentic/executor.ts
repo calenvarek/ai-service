@@ -16,11 +16,21 @@ export interface AgenticConfig {
     openaiReasoning?: 'low' | 'medium' | 'high';
 }
 
+export interface ToolExecutionMetric {
+    name: string;
+    success: boolean;
+    duration: number;
+    error?: string;
+    iteration: number;
+    timestamp: string;
+}
+
 export interface AgenticResult {
     finalMessage: string;
     iterations: number;
     toolCallsExecuted: number;
     conversationHistory: ChatCompletionMessageParam[];
+    toolMetrics: ToolExecutionMetric[];
 }
 
 /**
@@ -28,6 +38,7 @@ export interface AgenticResult {
  */
 export class AgenticExecutor {
     private logger?: any;
+    private toolMetrics: ToolExecutionMetric[] = [];
 
     constructor(logger?: any) {
         this.logger = logger;
@@ -94,6 +105,7 @@ export class AgenticExecutor {
                     iterations,
                     toolCallsExecuted,
                     conversationHistory: messages,
+                    toolMetrics: this.toolMetrics,
                 };
             }
 
@@ -108,32 +120,73 @@ export class AgenticExecutor {
             this.log(`Executing ${toolCalls.length} tool call(s)`);
 
             for (const toolCall of toolCalls) {
+                const startTime = Date.now();
+                const toolName = toolCall.function.name;
+
                 try {
-                    this.log(`Executing tool: ${toolCall.function.name}`, toolCall.function.arguments);
+                    this.log(`Executing tool: ${toolName}`, toolCall.function.arguments);
+
+                    // Log to info level so user can see tool execution in real-time
+                    if (this.logger?.info) {
+                        this.logger.info(`🔧 Running tool: ${toolName}`);
+                    }
 
                     // Parse arguments
                     const args = JSON.parse(toolCall.function.arguments);
 
                     // Execute the tool
-                    const result = await tools.execute(toolCall.function.name, args);
+                    const result = await tools.execute(toolName, args);
+
+                    const duration = Date.now() - startTime;
 
                     // Add tool result to conversation
                     messages.push({
                         role: 'tool',
                         tool_call_id: toolCall.id,
-                        content: this.formatToolResult({ id: toolCall.id, name: toolCall.function.name, result }),
+                        content: this.formatToolResult({ id: toolCall.id, name: toolName, result }),
                     });
 
                     toolCallsExecuted++;
-                    this.log(`Tool ${toolCall.function.name} succeeded`);
+
+                    // Track successful execution
+                    this.toolMetrics.push({
+                        name: toolName,
+                        success: true,
+                        duration,
+                        iteration: iterations,
+                        timestamp: new Date().toISOString(),
+                    });
+
+                    this.log(`Tool ${toolName} succeeded in ${duration}ms`);
+
+                    if (this.logger?.info) {
+                        this.logger.info(`✅ Tool ${toolName} completed (${duration}ms)`);
+                    }
                 } catch (error: any) {
-                    this.log(`Tool ${toolCall.function.name} failed: ${error.message}`);
+                    const duration = Date.now() - startTime;
+                    const errorMessage = error.message || String(error);
+
+                    this.log(`Tool ${toolName} failed: ${errorMessage}`);
+
+                    // Track failed execution
+                    this.toolMetrics.push({
+                        name: toolName,
+                        success: false,
+                        duration,
+                        error: errorMessage,
+                        iteration: iterations,
+                        timestamp: new Date().toISOString(),
+                    });
+
+                    if (this.logger?.warn) {
+                        this.logger.warn(`❌ Tool ${toolName} failed: ${errorMessage}`);
+                    }
 
                     // Add error result to conversation
                     messages.push({
                         role: 'tool',
                         tool_call_id: toolCall.id,
-                        content: `Tool execution failed: ${error.message}`,
+                        content: `Tool execution failed: ${errorMessage}`,
                     });
                 }
             }
@@ -171,6 +224,7 @@ export class AgenticExecutor {
             iterations,
             toolCallsExecuted,
             conversationHistory: messages,
+            toolMetrics: this.toolMetrics,
         };
     }
 

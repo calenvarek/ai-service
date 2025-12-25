@@ -1,5 +1,5 @@
 import type { ChatCompletionMessageParam } from 'openai/resources';
-import { runAgentic, type AgenticConfig } from './executor';
+import { runAgentic, type AgenticConfig, type ToolExecutionMetric } from './executor';
 import { createToolRegistry } from '../tools/registry';
 import { createCommitTools } from '../tools/commit-tools';
 import type { StorageAdapter, Logger } from '../types';
@@ -29,6 +29,7 @@ export interface AgenticCommitResult {
         rationale: string;
     }>;
     conversationHistory: ChatCompletionMessageParam[];
+    toolMetrics: ToolExecutionMetric[];
 }
 
 /**
@@ -98,6 +99,7 @@ export async function runAgenticCommit(config: AgenticCommitConfig): Promise<Age
         toolCallsExecuted: result.toolCallsExecuted,
         suggestedSplits: parsed.suggestedSplits,
         conversationHistory: result.conversationHistory,
+        toolMetrics: result.toolMetrics,
     };
 }
 
