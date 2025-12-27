@@ -299,6 +299,9 @@ function createGetBranchInfoTool(): Tool {
                 // Get commit count
                 const countResult = await run(`git rev-list --count ${branchName}`, { cwd: workingDir });
                 const commitCount = parseInt(countResult.stdout.trim(), 10);
+                if (isNaN(commitCount)) {
+                    throw new Error(`Invalid commit count returned from git: ${countResult.stdout}`);
+                }
 
                 return {
                     branchName,

@@ -23,3 +23,6 @@ export * from './tools/registry';
 export * from './tools/commit-tools';
 export * from './tools/release-tools';
 export * from './tools/publish-tools';
+
+// Observability
+export * from './observability';
