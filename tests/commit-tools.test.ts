@@ -34,9 +34,9 @@ describe('commit-tools', () => {
                 { workingDirectory: '/test/dir' }
             );
 
-            // Verify the command was constructed correctly (with separate quoted patterns)
+            // Verify the command was constructed correctly (with separate patterns)
             expect(gitTools.run).toHaveBeenCalledWith(
-                'git grep -n -C 2 "createStorageAdapter" -- \'*.ts\' \'*.js\'',
+                'git grep -n -C 2 "createStorageAdapter" -- *.ts *.js',
                 { cwd: '/test/dir' }
             );
         });
@@ -59,9 +59,9 @@ describe('commit-tools', () => {
                 { workingDirectory: '/test/dir' }
             );
 
-            // Single file type should be quoted
+            // Single file type pattern
             expect(gitTools.run).toHaveBeenCalledWith(
-                'git grep -n -C 2 "StorageAdapter" -- \'*.ts\'',
+                'git grep -n -C 2 "StorageAdapter" -- *.ts',
                 { cwd: '/test/dir' }
             );
         });
